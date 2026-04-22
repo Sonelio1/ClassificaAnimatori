@@ -25,3 +25,22 @@
 /* Rimuove frecce dagli input numerici */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+body { font-size: 18px; line-height: 1.5; }
+
+.card { 
+    transition: all 0.2s; 
+    border: 1px solid #334155; /* Contorno sottile per tutti */
+}
+
+/* Effetti Podio */
+.oro { border: 2px solid #fbbf24 !important; background: rgba(251, 191, 36, 0.1); }
+.argento { border: 2px solid #94a3b8 !important; background: rgba(148, 163, 184, 0.1); }
+.bronzo { border: 2px solid #a855f7 !important; background: rgba(168, 85, 247, 0.1); }
+
+.tab-button {
+    font-size: 0.9rem;
+    padding: 1rem 0.5rem;
+}
+
+input, select { font-size: 16px !important; } /* Evita zoom su iPhone */
