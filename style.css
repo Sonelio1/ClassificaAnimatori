@@ -1,0 +1,27 @@
+/* Ottimizzazione Mobile */
+* { -webkit-tap-highlight-color: transparent; }
+
+.card { transition: all 0.2s; }
+.card:active { transform: scale(0.98); background-color: #334155; }
+
+/* Animazioni Modali */
+.modal-overlay { animation: fadeIn 0.2s ease forwards; }
+.modal-content { animation: slideUp 0.3s ease forwards; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+/* Bottoni Tab */
+.tab-button {
+    transition: all 0.2s;
+    padding: 0.75rem 0.25rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+}
+.tab-button.active { background-color: #f59e0b; color: #0f172a; }
+
+/* Rimuove frecce dagli input numerici */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
