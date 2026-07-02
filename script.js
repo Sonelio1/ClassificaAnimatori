@@ -1,6 +1,3 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-import { getFirestore, collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, getDocs, where } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
-
 const firebaseConfig = {
     apiKey: "AIzaSyBDFKuynAUskoBtT2yUCBtJLpeNjoBrqr8",
     authDomain: "classificaanimatori.firebaseapp.com",
@@ -14,20 +11,137 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const animatoriRef = collection(db, "animatori");
 const squadreRef = collection(db, "squadre");
-const reportQuizRef = collection(db, "reportQuiz");
+
+// Lista pulita dai duplicati 
+const LISTA_INIZIALE = [
+    { Nome: "Thomas", Cognome: "Avezzu", Ruolo: "Animatore" },
+    { Nome: "Samuele", Cognome: "Avezzù", Ruolo: "Animatore" },
+    { Nome: "Elisa", Cognome: "Bacciu", Ruolo: "Animatore" },
+    { Nome: "Agnese", Cognome: "Boetto", Ruolo: "Animatore" },
+    { Nome: "Gemma", Cognome: "Borella", Ruolo: "Animatore" },
+    { Nome: "Mario", Cognome: "Cecconello", Ruolo: "Animatore" },
+    { Nome: "Anna", Cognome: "Crepaldi", Ruolo: "Animatore" },
+    { Nome: "Francesca", Cognome: "Dall'Osso", Ruolo: "Animatore" },
+    { Nome: "Gabriel", Cognome: "Destro", Ruolo: "Animatore" },
+    { Nome: "Giorgia", Cognome: "Destro", Ruolo: "Animatore" },
+    { Nome: "Alex", Cognome: "Ferrarese", Ruolo: "Animatore" },
+    { Nome: "Vittoria", Cognome: "Filippi", Ruolo: "Animatore" },
+    { Nome: "Sofia", Cognome: "Gorgolani", Ruolo: "Animatore" },
+    { Nome: "Alberto", Cognome: "Granata", Ruolo: "Animatore" },
+    { Nome: "Elena", Cognome: "Grandis", Ruolo: "Animatore" },
+    { Nome: "Giacomo", Cognome: "Mantoan", Ruolo: "Animatore" },
+    { Nome: "Matilde", Cognome: "Mattiazzi", Ruolo: "Animatore" },
+    { Nome: "Viola", Cognome: "Meneghetti", Ruolo: "Animatore" },
+    { Nome: "Denny", Cognome: "Miotto", Ruolo: "Animatore" },
+    { Nome: "Andrea", Cognome: "Moschini", Ruolo: "Animatore" },
+    { Nome: "Sofia", Cognome: "Nalin", Ruolo: "Animatore" },
+    { Nome: "Adele", Cognome: "Niola", Ruolo: "Animatore" },
+    { Nome: "Letizia", Cognome: "Padovani", Ruolo: "Animatore" },
+    { Nome: "Eva", Cognome: "Perazzolo", Ruolo: "Animatore" },
+    { Nome: "Ambra", Cognome: "Piva", Ruolo: "Animatore" },
+    { Nome: "Tommaso", Cognome: "Santato", Ruolo: "Animatore" },
+    { Nome: "Samuele", Cognome: "Scalabrin", Ruolo: "Animatore" },
+    { Nome: "Riccardo", Cognome: "Sella", Ruolo: "Animatore" },
+    { Nome: "Maddalena", Cognome: "Soprana", Ruolo: "Animatore" },
+    { Nome: "Emma", Cognome: "Tosin", Ruolo: "Animatore" },
+    { Nome: "Caterina", Cognome: "Uccellatori", Ruolo: "Animatore" },
+    { Nome: "Marco", Cognome: "Vallese", Ruolo: "Animatore" },
+    { Nome: "Viola", Cognome: "Vitulo", Ruolo: "Animatore" },
+    { Nome: "Arianna", Cognome: "Voltan", Ruolo: "Animatore" },
+    { Nome: "Anna", Cognome: "Zampieri", Ruolo: "Animatore" },
+    { Nome: "Camilla", Cognome: "Zulian", Ruolo: "Animatore" },
+    { Nome: "Melissa", Cognome: "Zulian", Ruolo: "Animatore" },
+    { Nome: "Sara", Cognome: "Bertaggia", Ruolo: "Animatore" },
+    { Nome: "Filippo", Cognome: "Berto", Ruolo: "Animatore" },
+    { Nome: "Elisa", Cognome: "Birolo", Ruolo: "Animatore" },
+    { Nome: "Diego", Cognome: "Cominato", Ruolo: "Animatore" },
+    { Nome: "Diego", Cognome: "Dainese", Ruolo: "Animatore" },
+    { Nome: "Antonio", Cognome: "Priore", Ruolo: "Animatore" },
+    { Nome: "Sofia", Cognome: "Vettorello", Ruolo: "Animatore" },
+    { Nome: "Kevin", Cognome: "Falasco", Ruolo: "Animatore" },
+    { Nome: "Emma", Cognome: "Ferro", Ruolo: "Animatore" },
+    { Nome: "Tommaso", Cognome: "Frigato", Ruolo: "Animatore" },
+    { Nome: "Pietro", Cognome: "Lunardi", Ruolo: "Animatore" },
+    { Nome: "Alice", Cognome: "Nalin", Ruolo: "Animatore" },
+    { Nome: "Alessandro", Cognome: "Niola", Ruolo: "Animatore" },
+    { Nome: "Giovanni", Cognome: "Suardelli", Ruolo: "Animatore" },
+    { Nome: "Riccardo", Cognome: "Viola", Ruolo: "Animatore" },
+    { Nome: "Viola", Cognome: "Andreetta", Ruolo: "Aiuto Animatore" },
+    { Nome: "Christian", Cognome: "Bassan", Ruolo: "Aiuto Animatore" },
+    { Nome: "Martina", Cognome: "Bazzan", Ruolo: "Aiuto Animatore" },
+    { Nome: "Benedetta", Cognome: "Bergo", Ruolo: "Aiuto Animatore" },
+    { Nome: "Laura", Cognome: "Birolo", Ruolo: "Aiuto Animatore" },
+    { Nome: "Elisa", Cognome: "Bondesan", Ruolo: "Aiuto Animatore" },
+    { Nome: "Asia", Cognome: "Broggio", Ruolo: "Aiuto Animatore" },
+    { Nome: "Bajram", Cognome: "Bunjaku", Ruolo: "Aiuto Animatore" },
+    { Nome: "Sofia", Cognome: "Cassetta", Ruolo: "Aiuto Animatore" },
+    { Nome: "Nicola", Cognome: "Cassetta", Ruolo: "Aiuto Animatore" },
+    { Nome: "Asmaa", Cognome: "Chafi", Ruolo: "Aiuto Animatore" },
+    { Nome: "Maria Ginevra", Cognome: "Ciaccia", Ruolo: "Aiuto Animatore" },
+    { Nome: "Giulia", Cognome: "Crivellaro", Ruolo: "Aiuto Animatore" },
+    { Nome: "Alice", Cognome: "Ferrarese", Ruolo: "Aiuto Animatore" },
+    { Nome: "Ashley", Cognome: "Fogo", Ruolo: "Aiuto Animatore" },
+    { Nome: "Matilde", Cognome: "Fontolan", Ruolo: "Aiuto Animatore" },
+    { Nome: "Pietro", Cognome: "Gnocco", Ruolo: "Aiuto Animatore" },
+    { Nome: "Cloe Diletta", Cognome: "Gradara", Ruolo: "Aiuto Animatore" },
+    { Nome: "Marco", Cognome: "Grisotto", Ruolo: "Aiuto Animatore" },
+    { Nome: "Zilin", Cognome: "Guo", Ruolo: "Aiuto Animatore" },
+    { Nome: "Bianca", Cognome: "Longhin", Ruolo: "Aiuto Animatore" },
+    { Nome: "Michele", Cognome: "Lunardi", Ruolo: "Aiuto Animatore" },
+    { Nome: "Adam", Cognome: "Machhour", Ruolo: "Aiuto Animatore" },
+    { Nome: "Angelica", Cognome: "Migliorini", Ruolo: "Aiuto Animatore" },
+    { Nome: "Iris", Cognome: "Olante", Ruolo: "Aiuto Animatore" },
+    { Nome: "Erik", Cognome: "Roccatello", Ruolo: "Aiuto Animatore" },
+    { Nome: "Pietro", Cognome: "Rossi", Ruolo: "Aiuto Animatore" },
+    { Nome: "Stefano", Cognome: "Sgobbi", Ruolo: "Aiuto Animatore" },
+    { Nome: "Lorenzo", Cognome: "Soncin", Ruolo: "Aiuto Animatore" },
+    { Nome: "Emma", Cognome: "Tasso", Ruolo: "Aiuto Animatore" },
+    { Nome: "Marco", Cognome: "Tordin", Ruolo: "Aiuto Animatore" },
+    { Nome: "Rebecca", Cognome: "Vallese", Ruolo: "Aiuto Animatore" },
+    { Nome: "Gianluca", Cognome: "Visentin", Ruolo: "Aiuto Animatore" },
+    { Nome: "Asia", Cognome: "Zanardo", Ruolo: "Aiuto Animatore" },
+    { Nome: "Onisiana", Cognome: "Zyba", Ruolo: "Aiuto Animatore" },
+    { Nome: "Anna", Cognome: "Patrese", Ruolo: "Aiuto Animatore" },
+    { Nome: "Jacopo", Cognome: "Lissandrin", Ruolo: "Aiuto Animatore" },
+    { Nome: "Luca", Cognome: "Lunardi", Ruolo: "Aiuto Animatore" }
+];
+
+// Funzione Admin per eseguire il reset e importare la nuova lista
+window.resetEImportaDatabase = async () => {
+    if(!confirm("ATTENZIONE: Stai per eliminare tutti i dati e importare la nuova lista. Procedere?")) return;
+    
+    // Cancella esistenti
+    const snapshot = await getDocs(animatoriRef);
+    for (const docSnap of snapshot.docs) { await deleteDoc(docSnap.ref); }
+    
+    // Carica nuovi
+    for (const a of LISTA_INIZIALE) {
+        await addDoc(animatoriRef, { 
+            nome: a.Nome, 
+            cognome: a.Cognome, 
+            ruolo: a.Ruolo, 
+            squadraId: null, 
+            punti: 0, 
+            sessionToken: "", 
+            colore: '#ffffff' 
+        });
+    }
+    alert("Database aggiornato con successo!");
+};
 
 let isAdmin = false;
 let animatori = [];
 let squadre = [];
-let reportQuiz = [];
 let searchTerm = "";
 let currentTab = 'tutti';
 
-// CONFIGURAZIONE QUIZ
-const quizDomande = [
-    { id: 1, domanda: "Chi è il patrono del nostro Grest?", opzioni: ["San Giovanni", "San Filippo", "San Marco"], corretta: 1, punti: 10 },
-    { id: 2, domanda: "In che anno è stato fondato il Grest?", opzioni: ["1990", "2005", "1970"], corretta: 2, punti: 5 }
+// Palette colori per nomi animatori (visibili su sfondo scuro)
+const coloriAnimatori = [
+    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4',
+    '#FFD93D', '#DDA0DD', '#FF8C42', '#6BCB77',
+    '#AEDEFC', '#FFB3B3', '#C9B1FF', '#FFCF9A'
 ];
+const COLORE_DEFAULT = '#ffffff';
 
 // Utility per evitare XSS
 const escapeHtml = (t) => { if(!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; };
@@ -116,7 +230,7 @@ const render = () => {
         ` : ''}
 
         <nav class="bg-slate-800 px-2 py-4 flex gap-2 sticky ${isAdmin ? 'top-[232px]' : 'top-[152px]'} z-20 border-b border-slate-700 overflow-x-auto no-scrollbar">
-            ${['tutti', 'animatori', 'aiuti', 'squadre', 'quiz', (isAdmin ? 'report' : '')].filter(t => t).map(t => `
+            ${['tutti', 'animatori', 'aiuti', 'squadre'].map(t => `
                 <button id="tab-${t}" class="tab-button min-w-[100px] py-3 rounded-2xl font-black text-[10px] uppercase tracking-tighter transition-all ${currentTab === t ? 'bg-amber-500 text-slate-900 shadow-lg scale-105' : 'text-slate-500 bg-slate-900/50'}">
                     ${t}
                 </button>
@@ -129,7 +243,7 @@ const render = () => {
     // Listeners Navigazione
     document.getElementById('adminBtn').onclick = () => { if(!isAdmin) apriModaleLogin(); else { isAdmin = false; render(); } };
     document.getElementById('searchInput').oninput = (e) => { searchTerm = e.target.value.toLowerCase(); aggiornaLista(); };
-    ['tutti', 'animatori', 'aiuti', 'squadre', 'quiz', 'report'].forEach(t => { 
+    ['tutti', 'animatori', 'aiuti', 'squadre'].forEach(t => { 
         const btn = document.getElementById(`tab-${t}`);
         if(btn) btn.onclick = () => { currentTab = t; render(); }; 
     });
@@ -171,46 +285,6 @@ const aggiornaLista = () => {
         return;
     }
 
-    // --- TAB QUIZ ---
-    if (currentTab === 'quiz') {
-        const mioId = getMioId();
-        const me = animatori.find(a => a.id === mioId);
-        container.innerHTML = `
-            <div class="bg-slate-900/50 p-6 rounded-[30px] border border-slate-800 mb-8 flex items-center justify-between">
-                <div>
-                    <p class="text-[10px] text-slate-500 font-black uppercase mb-1">Profilo Attivo</p>
-                    <p class="text-white font-black text-xl uppercase">${me?.nome || 'Admin'}</p>
-                </div>
-                <div class="text-right">
-                    <p class="text-[10px] text-slate-500 font-black uppercase mb-1">Punti Personali</p>
-                    <p class="text-amber-400 font-black text-2xl">${me?.punti || 0}</p>
-                </div>
-            </div>
-            <h2 class="text-amber-500 font-black text-sm uppercase tracking-widest mb-4 ml-2 text-center">Sfide Disponibili</h2>` +
-        quizDomande.map(q => `
-            <div class="bg-slate-800 p-7 rounded-[40px] border-2 border-slate-700 mb-5 shadow-2xl">
-                <div class="flex justify-between items-start mb-6">
-                    <h3 class="text-lg font-black text-white uppercase leading-tight">${q.domanda}</h3>
-                    <div class="bg-amber-500/10 text-amber-500 px-3 py-1 rounded-full text-[10px] font-black border border-amber-500/20">+${q.punti}</div>
-                </div>
-                <button onclick="window.giocaQuiz(${q.id})" class="w-full bg-amber-500 text-slate-900 py-4 rounded-2xl font-black shadow-lg hover:bg-white transition-all">GIOCA ORA</button>
-            </div>`).join('');
-        return;
-    }
-
-    // --- TAB REPORT (Admin) ---
-    if (currentTab === 'report' && isAdmin) {
-        container.innerHTML = reportQuiz.map(r => `
-            <div class="bg-slate-800 p-4 rounded-2xl mb-2 flex justify-between items-center border border-slate-700">
-                <div>
-                    <p class="text-white font-black text-xs uppercase">${r.animatore}</p>
-                    <p class="text-[10px] text-slate-500">${r.domanda}</p>
-                </div>
-                <div class="${r.esito ? 'text-green-500' : 'text-red-500'} font-black text-[10px] uppercase">${r.esito ? 'Vinto' : 'Perso'}</div>
-            </div>`).join('');
-        return;
-    }
-
     // --- CLASSIFICA ANIMATORI (Tutti / Animatori / Aiuti) ---
     let lista = animatori.filter(a => `${a.nome} ${a.cognome}`.toLowerCase().includes(searchTerm));
     if(currentTab === 'animatori') lista = lista.filter(a => a.ruolo !== 'aiutoanimatore');
@@ -226,7 +300,7 @@ const aggiornaLista = () => {
             <div class="flex items-center gap-5">
                 <div class="text-3xl">${medaglia}</div>
                 <div>
-                    <h4 class="font-black text-white text-lg uppercase leading-none">${escapeHtml(a.nome)} ${escapeHtml(a.cognome || '')}</h4>
+                    <h4 style="color: ${a.colore || COLORE_DEFAULT}" class="font-black text-lg uppercase leading-none">${escapeHtml(a.nome)} ${escapeHtml(a.cognome || '')}</h4>
                     <span class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">${squadre.find(s => s.id === a.squadraId)?.nome || 'Senza Squadra'}</span>
                 </div>
             </div>
@@ -272,6 +346,15 @@ window.apriProfilo = (id) => {
                 ${squadre.map(s => `<option value="${s.id}" ${a.squadraId === s.id ? 'selected' : ''}>${s.nome}</option>`).join('')}
             </select>
 
+            ${isAdmin ? `
+            <p class="text-[9px] text-slate-500 font-bold uppercase mb-2 ml-1">Colore Nome</p>
+            <div id="colorPicker" class="flex flex-wrap gap-2 mb-4" style="max-height: 120px; overflow-y: auto;">
+                ${coloriAnimatori.map(c => `
+                    <button type="button" class="color-btn w-8 h-8 rounded-full border-2 transition-all ${a.colore === c ? 'border-amber-500 scale-110' : 'border-slate-600'}" style="background: ${c}" data-color="${c}" title="${c}"></button>
+                `).join('')}
+            </div>
+            ` : ''}
+
             <div class="flex flex-col gap-2">
                 <button onclick="this.closest('.modal-overlay').remove()" class="w-full bg-slate-700 py-2 text-[9px] font-bold uppercase rounded">Annulla</button>
                 <button id="delBtn" class="text-[8px] text-red-500/50 hover:text-red-500 font-bold uppercase mt-2 transition-colors">Elimina Animatore</button>
@@ -279,12 +362,24 @@ window.apriProfilo = (id) => {
         </div>`;
     document.body.appendChild(overlay);
 
+    let selectedColor = a.colore || COLORE_DEFAULT;
+    if (isAdmin) {
+        document.querySelectorAll('#colorPicker .color-btn').forEach(btn => {
+            btn.onclick = () => {
+                selectedColor = btn.dataset.color;
+                document.querySelectorAll('#colorPicker .color-btn').forEach(b => b.classList.remove('border-amber-500', 'scale-110'));
+                btn.classList.add('border-amber-500', 'scale-110');
+            };
+        });
+    }
+
     const up = async (sgn) => {
         const v = parseInt(document.getElementById('puntiIn').value);
         if(isNaN(v)) return alert("Inserisci un numero");
         await updateDoc(doc(db, 'animatori', id), { 
             punti: (a.punti || 0) + (v * sgn), 
-            squadraId: document.getElementById('sS').value || null 
+            squadraId: document.getElementById('sS').value || null,
+            colore: selectedColor
         });
         overlay.remove();
     };
@@ -296,51 +391,6 @@ window.apriProfilo = (id) => {
             await deleteDoc(doc(db, 'animatori', id));
             overlay.remove();
         }
-    };
-};
-
-window.giocaQuiz = async (qId) => {
-    const mioId = getMioId();
-    if(!mioId) return alert("Accedi prima!");
-
-    // Controllo se ha già risposto
-    const check = await getDocs(query(reportQuizRef, where("animatoreId", "==", mioId), where("quizId", "==", qId)));
-    if(!check.empty) return alert("Hai già partecipato a questa sfida!");
-
-    const q = quizDomande.find(x => x.id === qId);
-    const me = animatori.find(a => a.id === mioId);
-    
-    const overlay = document.createElement('div');
-    overlay.className = 'fixed inset-0 bg-black/95 z-[400] flex items-center justify-center p-6';
-    overlay.innerHTML = `
-        <div class="bg-slate-800 w-full max-w-md p-10 rounded-[50px] border-2 border-amber-500 shadow-2xl">
-            <h2 class="text-2xl font-black text-amber-500 mb-8 text-center uppercase italic leading-tight">${q.domanda}</h2>
-            <div class="space-y-4">
-                ${q.opzioni.map((o, idx) => `
-                    <button onclick="window.sendAns(${qId}, ${idx}, '${mioId}')" class="w-full bg-slate-900 border-2 border-slate-700 p-6 rounded-3xl text-white font-bold hover:border-amber-500 transition-all active:scale-95 text-lg">
-                        ${o}
-                    </button>
-                `).join('')}
-            </div>
-        </div>`;
-    document.body.appendChild(overlay);
-
-    window.sendAns = async (qid, idx, aid) => {
-        const quest = quizDomande.find(x => x.id == qid);
-        const win = idx === quest.corretta;
-        if(win) await updateDoc(doc(db, 'animatori', aid), { punti: (me.punti || 0) + quest.punti });
-        
-        await addDoc(reportQuizRef, {
-            animatoreId: aid,
-            animatore: me.nome,
-            quizId: qid,
-            domanda: quest.domanda,
-            esito: win,
-            data: serverTimestamp()
-        });
-        
-        overlay.remove();
-        alert(win ? "GRANDIOSO! Punti aggiunti." : "PECCATO! Risposta errata.");
     };
 };
 
@@ -369,7 +419,7 @@ const apriModaleAggiungi = () => {
         const r = document.getElementById('nR').value;
         const s = document.getElementById('nS').value || null;
         if(n) { 
-            await addDoc(animatoriRef, { nome: n, cognome: c, ruolo: r, squadraId: s, punti: 0, sessionToken: "" });
+            await addDoc(animatoriRef, { nome: n, cognome: c, ruolo: r, squadraId: s, punti: 0, sessionToken: "", colore: COLORE_DEFAULT });
             overlay.remove(); 
         }
     };
@@ -388,10 +438,6 @@ onSnapshot(query(animatoriRef, orderBy("punti", "desc")), (s) => {
 onSnapshot(squadreRef, (s) => { 
     squadre = s.docs.map(d => ({id: d.id, ...d.data()})); 
     aggiornaLista(); 
-});
-onSnapshot(query(reportQuizRef, orderBy("data", "desc")), (s) => { 
-    reportQuiz = s.docs.map(d => ({id: d.id, ...d.data()})); 
-    if(currentTab === 'report') aggiornaLista(); 
 });
 
 render();
