@@ -1,3 +1,6 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+import { getFirestore, collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
 const firebaseConfig = {
     apiKey: "AIzaSyBDFKuynAUskoBtT2yUCBtJLpeNjoBrqr8",
     authDomain: "classificaanimatori.firebaseapp.com",
@@ -12,136 +15,11 @@ const db = getFirestore(app);
 const animatoriRef = collection(db, "animatori");
 const squadreRef = collection(db, "squadre");
 
-// Lista pulita dai duplicati 
-const LISTA_INIZIALE = [
-    { Nome: "Thomas", Cognome: "Avezzu", Ruolo: "Animatore" },
-    { Nome: "Samuele", Cognome: "Avezzù", Ruolo: "Animatore" },
-    { Nome: "Elisa", Cognome: "Bacciu", Ruolo: "Animatore" },
-    { Nome: "Agnese", Cognome: "Boetto", Ruolo: "Animatore" },
-    { Nome: "Gemma", Cognome: "Borella", Ruolo: "Animatore" },
-    { Nome: "Mario", Cognome: "Cecconello", Ruolo: "Animatore" },
-    { Nome: "Anna", Cognome: "Crepaldi", Ruolo: "Animatore" },
-    { Nome: "Francesca", Cognome: "Dall'Osso", Ruolo: "Animatore" },
-    { Nome: "Gabriel", Cognome: "Destro", Ruolo: "Animatore" },
-    { Nome: "Giorgia", Cognome: "Destro", Ruolo: "Animatore" },
-    { Nome: "Alex", Cognome: "Ferrarese", Ruolo: "Animatore" },
-    { Nome: "Vittoria", Cognome: "Filippi", Ruolo: "Animatore" },
-    { Nome: "Sofia", Cognome: "Gorgolani", Ruolo: "Animatore" },
-    { Nome: "Alberto", Cognome: "Granata", Ruolo: "Animatore" },
-    { Nome: "Elena", Cognome: "Grandis", Ruolo: "Animatore" },
-    { Nome: "Giacomo", Cognome: "Mantoan", Ruolo: "Animatore" },
-    { Nome: "Matilde", Cognome: "Mattiazzi", Ruolo: "Animatore" },
-    { Nome: "Viola", Cognome: "Meneghetti", Ruolo: "Animatore" },
-    { Nome: "Denny", Cognome: "Miotto", Ruolo: "Animatore" },
-    { Nome: "Andrea", Cognome: "Moschini", Ruolo: "Animatore" },
-    { Nome: "Sofia", Cognome: "Nalin", Ruolo: "Animatore" },
-    { Nome: "Adele", Cognome: "Niola", Ruolo: "Animatore" },
-    { Nome: "Letizia", Cognome: "Padovani", Ruolo: "Animatore" },
-    { Nome: "Eva", Cognome: "Perazzolo", Ruolo: "Animatore" },
-    { Nome: "Ambra", Cognome: "Piva", Ruolo: "Animatore" },
-    { Nome: "Tommaso", Cognome: "Santato", Ruolo: "Animatore" },
-    { Nome: "Samuele", Cognome: "Scalabrin", Ruolo: "Animatore" },
-    { Nome: "Riccardo", Cognome: "Sella", Ruolo: "Animatore" },
-    { Nome: "Maddalena", Cognome: "Soprana", Ruolo: "Animatore" },
-    { Nome: "Emma", Cognome: "Tosin", Ruolo: "Animatore" },
-    { Nome: "Caterina", Cognome: "Uccellatori", Ruolo: "Animatore" },
-    { Nome: "Marco", Cognome: "Vallese", Ruolo: "Animatore" },
-    { Nome: "Viola", Cognome: "Vitulo", Ruolo: "Animatore" },
-    { Nome: "Arianna", Cognome: "Voltan", Ruolo: "Animatore" },
-    { Nome: "Anna", Cognome: "Zampieri", Ruolo: "Animatore" },
-    { Nome: "Camilla", Cognome: "Zulian", Ruolo: "Animatore" },
-    { Nome: "Melissa", Cognome: "Zulian", Ruolo: "Animatore" },
-    { Nome: "Sara", Cognome: "Bertaggia", Ruolo: "Animatore" },
-    { Nome: "Filippo", Cognome: "Berto", Ruolo: "Animatore" },
-    { Nome: "Elisa", Cognome: "Birolo", Ruolo: "Animatore" },
-    { Nome: "Diego", Cognome: "Cominato", Ruolo: "Animatore" },
-    { Nome: "Diego", Cognome: "Dainese", Ruolo: "Animatore" },
-    { Nome: "Antonio", Cognome: "Priore", Ruolo: "Animatore" },
-    { Nome: "Sofia", Cognome: "Vettorello", Ruolo: "Animatore" },
-    { Nome: "Kevin", Cognome: "Falasco", Ruolo: "Animatore" },
-    { Nome: "Emma", Cognome: "Ferro", Ruolo: "Animatore" },
-    { Nome: "Tommaso", Cognome: "Frigato", Ruolo: "Animatore" },
-    { Nome: "Pietro", Cognome: "Lunardi", Ruolo: "Animatore" },
-    { Nome: "Alice", Cognome: "Nalin", Ruolo: "Animatore" },
-    { Nome: "Alessandro", Cognome: "Niola", Ruolo: "Animatore" },
-    { Nome: "Giovanni", Cognome: "Suardelli", Ruolo: "Animatore" },
-    { Nome: "Riccardo", Cognome: "Viola", Ruolo: "Animatore" },
-    { Nome: "Viola", Cognome: "Andreetta", Ruolo: "Aiuto Animatore" },
-    { Nome: "Christian", Cognome: "Bassan", Ruolo: "Aiuto Animatore" },
-    { Nome: "Martina", Cognome: "Bazzan", Ruolo: "Aiuto Animatore" },
-    { Nome: "Benedetta", Cognome: "Bergo", Ruolo: "Aiuto Animatore" },
-    { Nome: "Laura", Cognome: "Birolo", Ruolo: "Aiuto Animatore" },
-    { Nome: "Elisa", Cognome: "Bondesan", Ruolo: "Aiuto Animatore" },
-    { Nome: "Asia", Cognome: "Broggio", Ruolo: "Aiuto Animatore" },
-    { Nome: "Bajram", Cognome: "Bunjaku", Ruolo: "Aiuto Animatore" },
-    { Nome: "Sofia", Cognome: "Cassetta", Ruolo: "Aiuto Animatore" },
-    { Nome: "Nicola", Cognome: "Cassetta", Ruolo: "Aiuto Animatore" },
-    { Nome: "Asmaa", Cognome: "Chafi", Ruolo: "Aiuto Animatore" },
-    { Nome: "Maria Ginevra", Cognome: "Ciaccia", Ruolo: "Aiuto Animatore" },
-    { Nome: "Giulia", Cognome: "Crivellaro", Ruolo: "Aiuto Animatore" },
-    { Nome: "Alice", Cognome: "Ferrarese", Ruolo: "Aiuto Animatore" },
-    { Nome: "Ashley", Cognome: "Fogo", Ruolo: "Aiuto Animatore" },
-    { Nome: "Matilde", Cognome: "Fontolan", Ruolo: "Aiuto Animatore" },
-    { Nome: "Pietro", Cognome: "Gnocco", Ruolo: "Aiuto Animatore" },
-    { Nome: "Cloe Diletta", Cognome: "Gradara", Ruolo: "Aiuto Animatore" },
-    { Nome: "Marco", Cognome: "Grisotto", Ruolo: "Aiuto Animatore" },
-    { Nome: "Zilin", Cognome: "Guo", Ruolo: "Aiuto Animatore" },
-    { Nome: "Bianca", Cognome: "Longhin", Ruolo: "Aiuto Animatore" },
-    { Nome: "Michele", Cognome: "Lunardi", Ruolo: "Aiuto Animatore" },
-    { Nome: "Adam", Cognome: "Machhour", Ruolo: "Aiuto Animatore" },
-    { Nome: "Angelica", Cognome: "Migliorini", Ruolo: "Aiuto Animatore" },
-    { Nome: "Iris", Cognome: "Olante", Ruolo: "Aiuto Animatore" },
-    { Nome: "Erik", Cognome: "Roccatello", Ruolo: "Aiuto Animatore" },
-    { Nome: "Pietro", Cognome: "Rossi", Ruolo: "Aiuto Animatore" },
-    { Nome: "Stefano", Cognome: "Sgobbi", Ruolo: "Aiuto Animatore" },
-    { Nome: "Lorenzo", Cognome: "Soncin", Ruolo: "Aiuto Animatore" },
-    { Nome: "Emma", Cognome: "Tasso", Ruolo: "Aiuto Animatore" },
-    { Nome: "Marco", Cognome: "Tordin", Ruolo: "Aiuto Animatore" },
-    { Nome: "Rebecca", Cognome: "Vallese", Ruolo: "Aiuto Animatore" },
-    { Nome: "Gianluca", Cognome: "Visentin", Ruolo: "Aiuto Animatore" },
-    { Nome: "Asia", Cognome: "Zanardo", Ruolo: "Aiuto Animatore" },
-    { Nome: "Onisiana", Cognome: "Zyba", Ruolo: "Aiuto Animatore" },
-    { Nome: "Anna", Cognome: "Patrese", Ruolo: "Aiuto Animatore" },
-    { Nome: "Jacopo", Cognome: "Lissandrin", Ruolo: "Aiuto Animatore" },
-    { Nome: "Luca", Cognome: "Lunardi", Ruolo: "Aiuto Animatore" }
-];
-
-// Funzione Admin per eseguire il reset e importare la nuova lista
-window.resetEImportaDatabase = async () => {
-    if(!confirm("ATTENZIONE: Stai per eliminare tutti i dati e importare la nuova lista. Procedere?")) return;
-    
-    // Cancella esistenti
-    const snapshot = await getDocs(animatoriRef);
-    for (const docSnap of snapshot.docs) { await deleteDoc(docSnap.ref); }
-    
-    // Carica nuovi
-    for (const a of LISTA_INIZIALE) {
-        await addDoc(animatoriRef, { 
-            nome: a.Nome, 
-            cognome: a.Cognome, 
-            ruolo: a.Ruolo, 
-            squadraId: null, 
-            punti: 0, 
-            sessionToken: "", 
-            colore: '#ffffff' 
-        });
-    }
-    alert("Database aggiornato con successo!");
-};
-
 let isAdmin = false;
 let animatori = [];
 let squadre = [];
 let searchTerm = "";
 let currentTab = 'tutti';
-
-// Palette colori per nomi animatori (visibili su sfondo scuro)
-const coloriAnimatori = [
-    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4',
-    '#FFD93D', '#DDA0DD', '#FF8C42', '#6BCB77',
-    '#AEDEFC', '#FFB3B3', '#C9B1FF', '#FFCF9A'
-];
-const COLORE_DEFAULT = '#ffffff';
 
 // Utility per evitare XSS
 const escapeHtml = (t) => { if(!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; };
@@ -277,7 +155,12 @@ const aggiornaLista = () => {
                         <span class="text-[10px] font-black text-amber-500 uppercase tracking-widest">Posizione #${i+1}</span>
                         <h3 class="text-2xl font-black text-white italic uppercase leading-none">${s.nome}</h3>
                     </div>
-                    <div class="bg-amber-500 text-slate-900 h-14 w-14 flex items-center justify-center rounded-2xl font-black text-2xl shadow-lg">${s.punti}</div>
+                    <div class="flex items-center gap-4">
+                        <div class="bg-amber-500 text-slate-900 h-14 w-14 flex items-center justify-center rounded-2xl font-black text-2xl shadow-lg">${s.punti}</div>
+                        ${isAdmin ? `
+                            <button onclick="window.eliminaSquadra('${s.id}')" class="bg-red-500/10 text-red-500 p-3 rounded-2xl text-[9px] font-black uppercase border border-red-500/20 active:scale-95 transition-all">Elimina</button>
+                        ` : ''}
+                    </div>
                 </div>
                 <p class="mt-4 text-[10px] text-slate-500 font-bold uppercase border-t border-slate-700/50 pt-3">Componenti: ${s.membri.map(m => m.nome).join(', ') || 'Nessuno'}</p>
             </div>`;
@@ -296,25 +179,28 @@ const aggiornaLista = () => {
         const medaglia = isPodio ? (i===0 ? '🥇' : i===1 ? '🥈' : '🥉') : '';
         
         return `
-        <div class="card ${classePodio} bg-slate-800 p-5 rounded-[30px] mb-4 flex justify-between items-center shadow-lg border-2 border-transparent transition-all active:scale-95" onclick="${isAdmin ? `window.apriProfilo('${a.id}')` : ''}">
+        <div class="card ${classePodio} bg-slate-800 p-5 rounded-[30px] mb-4 flex justify-between items-center shadow-lg border-2 border-transparent transition-all ${isAdmin ? 'active:scale-95 cursor-pointer hover:bg-slate-700' : ''}" onclick="${isAdmin ? `window.apriProfilo('${a.id}')` : ''}">
             <div class="flex items-center gap-5">
                 <div class="text-3xl">${medaglia}</div>
                 <div>
-                    <h4 style="color: ${a.colore || COLORE_DEFAULT}" class="font-black text-lg uppercase leading-none">${escapeHtml(a.nome)} ${escapeHtml(a.cognome || '')}</h4>
+                    <h4 class="font-black text-lg uppercase leading-none" style="color: ${a.colore || '#ffffff'}">${escapeHtml(a.nome)} ${escapeHtml(a.cognome || '')}</h4>
                     <span class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">${squadre.find(s => s.id === a.squadraId)?.nome || 'Senza Squadra'}</span>
                 </div>
             </div>
             <div class="flex items-center gap-4">
                 <div class="text-amber-400 font-black text-3xl">${a.punti || 0}</div>
-                ${isAdmin ? `
-                    <button onclick="event.stopPropagation(); window.resetRemoto('${a.id}')" class="bg-red-500/10 text-red-500 p-3 rounded-2xl text-[9px] font-black uppercase border border-red-500/20">Reset</button>
-                ` : ''}
             </div>
         </div>`;
     }).join('');
 };
 
 // --- LOGICA MODALI ---
+
+window.eliminaSquadra = async (id) => {
+    if (confirm("Vuoi davvero eliminare questa squadra? Gli animatori associati rimarranno senza squadra.")) {
+        await deleteDoc(doc(db, 'squadre', id));
+    }
+};
 
 window.resetRemoto = async (id) => {
     if (confirm("Vuoi scollegare questo dispositivo? Il telefono dell'animatore tornerà alla schermata di login.")) {
@@ -324,72 +210,92 @@ window.resetRemoto = async (id) => {
 
 window.apriProfilo = (id) => {
     const a = animatori.find(x => x.id === id);
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-    overlay.innerHTML = `
-        <div class="modal-content">
-            <h2 class="text-sm font-black text-amber-500 uppercase mb-4 text-center tracking-tight">${a.nome}</h2>
+    if(!a) return;
+
+    // Crea un livello a tutto schermo (Schermata Profilo)
+    const profileScreen = document.createElement('div');
+    profileScreen.className = 'fixed inset-0 bg-slate-900 z-[200] flex flex-col overflow-y-auto animate-fade-in';
+    profileScreen.innerHTML = `
+        <header class="bg-slate-800 px-6 py-5 shadow-xl flex items-center gap-4 sticky top-0 z-10 border-b border-slate-700">
+            <button onclick="this.closest('.fixed').remove()" class="bg-slate-700 text-white w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-lg active:scale-95 transition-all">
+                ⬅️
+            </button>
+            <div class="flex-1 overflow-hidden">
+                <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">Profilo Animatore</p>
+                <h1 class="text-2xl font-black uppercase leading-none tracking-tight truncate" style="color: ${a.colore || '#ffffff'}">
+                    ${escapeHtml(a.nome)} ${escapeHtml(a.cognome || '')}
+                </h1>
+            </div>
+        </header>
+
+        <div class="p-6 max-w-2xl mx-auto w-full flex flex-col gap-6 pb-20">
             
-            <div class="bg-slate-900 p-3 rounded-lg mb-4 text-center border border-slate-700">
-                <p class="text-[9px] text-slate-500 font-bold uppercase mb-2">Inserisci Punti</p>
-                <input type="number" id="puntiIn" placeholder="0" class="text-center text-2xl font-black mb-3 bg-transparent border-none outline-none">
+            <div class="bg-slate-800 rounded-[35px] p-8 shadow-xl border-2 border-slate-700 text-center relative">
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-2">Punteggio Attuale</p>
+                <div class="text-7xl font-black text-amber-400 mb-8 drop-shadow-lg">${a.punti || 0}</div>
                 
-                <div class="flex gap-2">
-                    <button id="mB" class="flex-1 bg-red-600/80 hover:bg-red-600 py-2 text-[10px] font-bold rounded transition-colors uppercase tracking-tighter">- punti</button>
-                    <button id="pB" class="flex-1 bg-green-600/80 hover:bg-green-600 py-2 text-[10px] font-bold rounded transition-colors uppercase tracking-tighter">+ punti</button>
+                <div class="bg-slate-900 rounded-3xl p-5 border border-slate-700/50">
+                    <p class="text-[10px] text-slate-500 font-bold uppercase mb-4">Aggiungi / Rimuovi</p>
+                    <div class="flex items-center gap-3">
+                        <button id="mB" class="flex-1 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white py-4 text-sm font-black rounded-2xl transition-colors uppercase tracking-widest border border-red-500/20 active:scale-95">- Punti</button>
+                        <input type="number" id="puntiIn" placeholder="0" class="w-24 text-center text-3xl font-black bg-transparent border-none outline-none text-white placeholder:text-slate-700">
+                        <button id="pB" class="flex-1 bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white py-4 text-sm font-black rounded-2xl transition-colors uppercase tracking-widest border border-green-500/20 active:scale-95">+ Punti</button>
+                    </div>
                 </div>
             </div>
 
-            <p class="text-[9px] text-slate-500 font-bold uppercase mb-1 ml-1">Squadra</p>
-            <select id="sS" class="mb-6 text-xs p-2">
-                <option value="">Nessuna squadra</option>
-                ${squadre.map(s => `<option value="${s.id}" ${a.squadraId === s.id ? 'selected' : ''}>${s.nome}</option>`).join('')}
-            </select>
+            <div class="bg-slate-800 rounded-[35px] p-8 shadow-xl border-2 border-slate-700">
+                <h3 class="text-sm font-black text-white uppercase tracking-widest mb-6 border-b border-slate-700 pb-3">Impostazioni</h3>
+                
+                <label class="block text-[10px] text-slate-400 font-black uppercase mb-2 ml-2">Squadra</label>
+                <select id="sS" class="w-full bg-slate-900 border-2 border-slate-700 rounded-2xl p-4 text-white font-bold mb-6 appearance-none outline-none focus:border-amber-500">
+                    <option value="">Nessuna squadra</option>
+                    ${squadre.map(s => `<option value="${s.id}" ${a.squadraId === s.id ? 'selected' : ''}>${s.nome}</option>`).join('')}
+                </select>
 
-            ${isAdmin ? `
-            <p class="text-[9px] text-slate-500 font-bold uppercase mb-2 ml-1">Colore Nome</p>
-            <div id="colorPicker" class="flex flex-wrap gap-2 mb-4" style="max-height: 120px; overflow-y: auto;">
-                ${coloriAnimatori.map(c => `
-                    <button type="button" class="color-btn w-8 h-8 rounded-full border-2 transition-all ${a.colore === c ? 'border-amber-500 scale-110' : 'border-slate-600'}" style="background: ${c}" data-color="${c}" title="${c}"></button>
-                `).join('')}
+                <label class="block text-[10px] text-slate-400 font-black uppercase mb-2 ml-2">Colore Nome</label>
+                <input type="color" id="colorIn" value="${a.colore || '#ffffff'}" class="w-full h-14 bg-slate-900 border-2 border-slate-700 rounded-2xl p-2 mb-8 cursor-pointer">
+
+                <button id="saveInfoBtn" class="w-full bg-amber-500 text-slate-900 py-4 rounded-2xl font-black text-sm uppercase shadow-lg active:scale-95 transition-all">Salva Impostazioni</button>
             </div>
-            ` : ''}
 
-            <div class="flex flex-col gap-2">
-                <button onclick="this.closest('.modal-overlay').remove()" class="w-full bg-slate-700 py-2 text-[9px] font-bold uppercase rounded">Annulla</button>
-                <button id="delBtn" class="text-[8px] text-red-500/50 hover:text-red-500 font-bold uppercase mt-2 transition-colors">Elimina Animatore</button>
+            <div class="mt-2 flex flex-col gap-3">
+                <button onclick="window.resetRemoto('${a.id}'); this.closest('.fixed').remove();" class="w-full bg-slate-800 text-slate-400 py-4 rounded-2xl font-black text-xs uppercase border border-slate-700 hover:text-white active:scale-95 transition-all">Scollega Telefono Animatore</button>
+                <button id="delBtn" class="w-full bg-red-500/10 text-red-500 py-4 rounded-2xl font-black text-xs uppercase border border-red-500/20 hover:bg-red-500 hover:text-white active:scale-95 transition-all">Elimina Profilo Definitivamente</button>
             </div>
-        </div>`;
-    document.body.appendChild(overlay);
+        </div>
+    `;
+    document.body.appendChild(profileScreen);
 
-    let selectedColor = a.colore || COLORE_DEFAULT;
-    if (isAdmin) {
-        document.querySelectorAll('#colorPicker .color-btn').forEach(btn => {
-            btn.onclick = () => {
-                selectedColor = btn.dataset.color;
-                document.querySelectorAll('#colorPicker .color-btn').forEach(b => b.classList.remove('border-amber-500', 'scale-110'));
-                btn.classList.add('border-amber-500', 'scale-110');
-            };
-        });
-    }
-
+    // Gestione aggiunta/rimozione punti (chiude la schermata dopo il salvataggio per mostrare la classifica aggiornata)
     const up = async (sgn) => {
-        const v = parseInt(document.getElementById('puntiIn').value);
-        if(isNaN(v)) return alert("Inserisci un numero");
+        const val = parseInt(document.getElementById('puntiIn').value);
+        if(isNaN(val) || val === 0) return alert("Inserisci un numero valido di punti");
         await updateDoc(doc(db, 'animatori', id), { 
-            punti: (a.punti || 0) + (v * sgn), 
+            punti: (a.punti || 0) + (val * sgn), 
             squadraId: document.getElementById('sS').value || null,
-            colore: selectedColor
+            colore: document.getElementById('colorIn').value
         });
-        overlay.remove();
+        profileScreen.remove();
     };
 
     document.getElementById('pB').onclick = () => up(1);
     document.getElementById('mB').onclick = () => up(-1);
+    
+    // Solo salvataggio info base (Colore e Squadra)
+    document.getElementById('saveInfoBtn').onclick = async () => {
+        await updateDoc(doc(db, 'animatori', id), { 
+            squadraId: document.getElementById('sS').value || null,
+            colore: document.getElementById('colorIn').value
+        });
+        profileScreen.remove();
+    };
+
+    // Eliminazione animatore
     document.getElementById('delBtn').onclick = async () => {
-        if(confirm("Sei sicuro di voler eliminare questo profilo?")) {
+        if(confirm("Sei sicuro di voler eliminare definitivamente questo profilo?")) {
             await deleteDoc(doc(db, 'animatori', id));
-            overlay.remove();
+            profileScreen.remove();
         }
     };
 };
@@ -398,28 +304,36 @@ const apriModaleAggiungi = () => {
     const overlay = document.createElement('div');
     overlay.className = 'fixed inset-0 bg-black/80 z-[200] flex items-end';
     overlay.innerHTML = `
-        <div class="bg-slate-800 w-full p-10 rounded-t-[50px] border-t-4 border-amber-500 shadow-2xl">
+        <div class="bg-slate-800 w-full p-10 rounded-t-[50px] border-t-4 border-amber-500 shadow-2xl overflow-y-auto max-h-[90vh]">
             <h2 class="text-xl font-black text-amber-400 mb-8 uppercase text-center tracking-widest">Nuovo Profilo</h2>
             <input type="text" id="nN" placeholder="Nome" class="w-full bg-slate-900 border-2 border-slate-700 rounded-2xl p-5 text-white mb-4 outline-none focus:border-amber-500">
             <input type="text" id="nC" placeholder="Cognome" class="w-full bg-slate-900 border-2 border-slate-700 rounded-2xl p-5 text-white mb-4 outline-none focus:border-amber-500">
+            
             <select id="nR" class="w-full bg-slate-900 border-2 border-slate-700 rounded-2xl p-5 text-white font-bold mb-4 uppercase">
                 <option value="animatore">Animatore</option>
                 <option value="aiutoanimatore">Aiuto Animatore</option>
             </select>
-            <select id="nS" class="w-full bg-slate-900 border-2 border-slate-700 rounded-2xl p-5 text-white font-bold mb-10">
+            
+            <select id="nS" class="w-full bg-slate-900 border-2 border-slate-700 rounded-2xl p-5 text-white font-bold mb-4">
                 <option value="">Scegli Squadra...</option>
                 ${squadre.map(s => `<option value="${s.id}">${s.nome}</option>`).join('')}
             </select>
+
+            <p class="text-[10px] text-slate-400 font-black uppercase mb-2 ml-2 text-left">Colore del Nome</p>
+            <input type="color" id="nColor" value="#ffffff" class="w-full h-12 bg-slate-900 border-2 border-slate-700 rounded-2xl p-2 mb-10 cursor-pointer">
+            
             <button id="saveNew" class="w-full bg-amber-500 text-slate-900 py-5 rounded-2xl font-black text-lg shadow-lg uppercase">Salva Animatore</button>
         </div>`;
     document.body.appendChild(overlay);
+    
     document.getElementById('saveNew').onclick = async () => {
         const n = document.getElementById('nN').value.trim();
         const c = document.getElementById('nC').value.trim();
         const r = document.getElementById('nR').value;
         const s = document.getElementById('nS').value || null;
+        const col = document.getElementById('nColor').value;
         if(n) { 
-            await addDoc(animatoriRef, { nome: n, cognome: c, ruolo: r, squadraId: s, punti: 0, sessionToken: "", colore: COLORE_DEFAULT });
+            await addDoc(animatoriRef, { nome: n, cognome: c, ruolo: r, squadraId: s, punti: 0, sessionToken: "", colore: col });
             overlay.remove(); 
         }
     };
