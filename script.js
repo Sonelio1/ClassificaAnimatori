@@ -341,7 +341,7 @@ const apriModaleAggiungi = () => {
 
 const apriModaleLogin = () => {
     const p = prompt("Inserisci Password Master:");
-    if(p === 'grest2026') { isAdmin = true; render(); }
+    if(p === 'generalelef') { isAdmin = true; render(); }
 };
 
 // --- REALTIME SYNC ---
